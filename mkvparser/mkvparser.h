@@ -116,6 +116,38 @@ class Block {
   const long long m_discard_padding;
 };
 
+class BlockMore {
+ public:
+  const long long m_start;
+  const long long m_size;
+  BlockMore(long long start, long long size);
+  ~BlockMore();
+
+  long Parse(const Cluster*);
+
+  long long GetAdditionalId() const;
+  const Block::Frame& getBlockAdditional() const;
+
+protected:
+  long long m_blockAdditionalId;
+  Block::Frame* m_blockAdditional;
+};
+
+class BlockAdditions {
+ public:
+  BlockAdditions(long long start, long long size);
+  ~BlockAdditions();
+
+  long Parse(const Cluster*);
+
+  const BlockMore* getBlockMore() const;
+
+ protected:
+  const long long m_start;
+  const long long m_size;
+  BlockMore* m_blockMore;
+};
+
 class BlockEntry {
   BlockEntry(const BlockEntry&);
   BlockEntry& operator=(const BlockEntry&);
@@ -165,10 +197,21 @@ class BlockGroup : public BlockEntry {
              long long prev, long long next, long long duration,
              long long discard_padding);
 
+  BlockGroup(Cluster*, long index,
+             long long block_start,  // absolute pos of block's payload
+             long long block_size,  // size of block's payload
+             long long prev, long long next, long long duration,
+             long long discard_padding,
+             long long additions_start,
+             long long additions_size);
+  ~BlockGroup();
+
   long Parse();
 
   Kind GetKind() const;
   const Block* GetBlock() const;
+
+  const BlockAdditions* GetBlockAdditions() const;
 
   long long GetPrevTimeCode() const;  // relative to block's time
   long long GetNextTimeCode() const;  // as above
@@ -176,6 +219,7 @@ class BlockGroup : public BlockEntry {
 
  private:
   Block m_block;
+  BlockAdditions* m_blockAdditions;
   const long long m_prev;
   const long long m_next;
   const long long m_duration;
@@ -518,6 +562,7 @@ class VideoTrack : public Track {
   long long GetDisplayHeight() const;
   long long GetDisplayUnit() const;
   long long GetStereoMode() const;
+  long long GetAlphaMode() const;
   double GetFrameRate() const;
 
   bool VetEntry(const BlockEntry*) const;
@@ -536,6 +581,7 @@ class VideoTrack : public Track {
   long long m_display_height;
   long long m_display_unit;
   long long m_stereo_mode;
+  long long m_alpha_mode;
   char* m_colour_space;
   double m_rate;
 
